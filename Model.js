@@ -1,31 +1,30 @@
 'use strict';
 
-/**
- * A wireframe model represented by two families of parameter curves.
- *
- * Each curve is an array of 3D points: [[x, y, z], ...]. The U family
- * contains curves with varying u and fixed v; the V family contains curves
- * with fixed u and varying v.
- *
- * The curves are packed into two WebGL buffers. Separate draw ranges are
- * kept for each polyline so gl.LINE_STRIP never connects adjacent curves.
- */
+
 function Model(name) {
     this.name = name;
 
     this.uCurves = [];
     this.vCurves = [];
+    this.intersectionCurves = [];
+
     this.uRanges = [];
     this.vRanges = [];
+    this.intersectionRanges = [];
 
     this.iUVertexBuffer = gl.createBuffer();
     this.iVVertexBuffer = gl.createBuffer();
+    this.iIntersectionVertexBuffer = gl.createBuffer();
 
     function uploadCurves(buffer, curves) {
         const vertices = [];
         const ranges = [];
 
         for (const curve of curves) {
+            if (!Array.isArray(curve) || curve.length === 0) {
+                continue;
+            }
+
             const first = vertices.length / 3;
 
             for (const point of curve) {
@@ -47,34 +46,52 @@ function Model(name) {
 
     function drawCurves(buffer, ranges) {
         gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-        gl.vertexAttribPointer(shProgram.iAttribVertex, 3, gl.FLOAT, false, 0, 0);
+        gl.vertexAttribPointer(
+            shProgram.iAttribVertex,
+            3,
+            gl.FLOAT,
+            false,
+            0,
+            0
+        );
         gl.enableVertexAttribArray(shProgram.iAttribVertex);
 
         for (const range of ranges) {
-            gl.drawArrays(gl.LINE_STRIP, range.first, range.count);
+            if (range.count >= 2) {
+                gl.drawArrays(gl.LINE_STRIP, range.first, range.count);
+            }
         }
     }
 
-    /** Upload separate U and V curve sets to WebGL. */
-    this.BufferData = function (uCurves, vCurves) {
-        this.uCurves = uCurves;
-        this.vCurves = vCurves;
+    this.BufferData = function (uCurves, vCurves, intersectionCurves = []) {
+        this.uCurves = uCurves || [];
+        this.vCurves = vCurves || [];
+        this.intersectionCurves = intersectionCurves || [];
 
         this.uRanges = uploadCurves(this.iUVertexBuffer, this.uCurves);
         this.vRanges = uploadCurves(this.iVVertexBuffer, this.vCurves);
+        this.intersectionRanges = uploadCurves(
+            this.iIntersectionVertexBuffer,
+            this.intersectionCurves
+        );
     };
 
-    /** Draw all polylines along the u parameter. */
+    /** Draw all polylines along the u parameter using the current shader color. */
     this.DrawU = function () {
         drawCurves(this.iUVertexBuffer, this.uRanges);
     };
 
-    /** Draw all polylines along the v parameter. */
+    /** Draw all polylines along the v parameter using the current shader color. */
     this.DrawV = function () {
         drawCurves(this.iVVertexBuffer, this.vRanges);
     };
 
-    /** Draw both curve families using the currently selected shader color. */
+    /** Draw highlighted intersection curve(s) using the current shader color. */
+    this.DrawIntersection = function () {
+        drawCurves(this.iIntersectionVertexBuffer, this.intersectionRanges);
+    };
+
+
     this.Draw = function () {
         this.DrawU();
         this.DrawV();

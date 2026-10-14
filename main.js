@@ -88,7 +88,17 @@ function CreateSurfaceData() {
         vCurves.push(curve);
     }
 
-    return { uCurves: uCurves, vCurves: vCurves };
+    const intersectionCurve = [];
+    for (let i = 0; i <= SURFACE_SEGMENTS; i++) {
+        const u = i * uStep;
+        intersectionCurve.push(kleinBottlePoint(u, 0));
+    }
+
+    return {
+        uCurves: uCurves,
+        vCurves: vCurves,
+        intersectionCurves: [intersectionCurve]
+    };
 }
 
 function draw() {
@@ -119,6 +129,11 @@ function draw() {
 
     gl.uniform4fv(shProgram.iColor, [1.00, 0.72, 0.22, 1.0]);
     surface.DrawV();
+
+    gl.uniform4fv(shProgram.iColor, [1.00, 0.16, 0.24, 1.0]);
+    gl.depthFunc(gl.LEQUAL);
+    surface.DrawIntersection();
+    gl.depthFunc(gl.LESS);
 }
 
 function initGL() {
@@ -136,7 +151,11 @@ function initGL() {
 
     surface = new Model('KleinBottle');
     const surfaceData = CreateSurfaceData();
-    surface.BufferData(surfaceData.uCurves, surfaceData.vCurves);
+    surface.BufferData(
+        surfaceData.uCurves,
+        surfaceData.vCurves,
+        surfaceData.intersectionCurves
+    );
 
     gl.enable(gl.DEPTH_TEST);
 }
