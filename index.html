@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PA1 — Klein Bottle Surface Rendering</title>
+    <style>
+        body {
+            margin: 20px;
+            background: #eeeeee;
+            color: #20232a;
+            font-family: Arial, sans-serif;
+        }
+
+        #canvas-holder {
+            width: min(90vw, 760px);
+        }
+
+        #webglcanvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            background: #070b12;
+            border: 1px solid #363b45;
+        }
+
+        .hint {
+            max-width: 760px;
+            line-height: 1.45;
+        }
+    </style>
+    <script src="./Utils/trackball-rotator.js"></script>
+    <script src="./Utils/m4.js"></script>
+    <script src="./shader.js"></script>
+    <script src="Model.js"></script>
+    <script src="main.js"></script>
+</head>
+<body onload="init()">
+    <h2>Klein Bottle — Surface Wireframe (Variant 6)</h2>
+    <p class="hint">
+        Drag the mouse over the model to rotate it. The blue lines are U-curves
+        (u varies, v is fixed); the yellow lines are V-curves (v varies, u is fixed).
+    </p>
+    <div id="canvas-holder">
+        <canvas width="760" height="620" id="webglcanvas">
+            Your browser does not support the HTML canvas element.
+        </canvas>
+    </div>
+</body>
+</html>
